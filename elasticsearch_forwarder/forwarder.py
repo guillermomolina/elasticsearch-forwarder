@@ -52,12 +52,15 @@ def get_data(host_fields, extra_fields):
 
 def get_bulk_data(index, pipeline, host_fields, extra_fields):
     for doc in get_data(host_fields, extra_fields):
-        yield {
+        data = {
             '_index': index,
             '_type': '_doc',
             '_source': doc,
             'pipeline': pipeline
         }
+
+        logging.info('Document: %s', data)
+        yield data
 
 
 def main():
@@ -78,7 +81,8 @@ def main():
     else:
         loglevel = logging.ERROR
 
-    logging.basicConfig(level=loglevel,
+    logging.basicConfig(level=loglevel, 
+                        filename='/var/log/elasticsearch-forwarder.log',
                         format='%(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
