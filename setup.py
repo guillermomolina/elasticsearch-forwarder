@@ -40,6 +40,7 @@ setup(
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
     py_modules=['elasticsearch_forwarder'],
+    packages=['elasticsearch_forwarder'],
     install_requires=[
         'distro',
         'elasticsearch',
