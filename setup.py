@@ -29,9 +29,9 @@ def read(*parts):
 
 
 setup(
-    name='elasticsearch_forwarder',
+    name='elasticsearch-forwarder',
     version=package_version,
-    url='https://github.com/guillermomolina/elasticsearch_forwarder',
+    url='https://github.com/guillermomolina/elasticsearch-forwarder',
     author='Guillermo Adrián Molina',
     author_email='guillermomolina@hotmail.com',
     license='Apache License, Version 2.0',
@@ -47,7 +47,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'forwarder = forwarder:main',
+            'forwarder = elasticsearch_forwarder.forwarder:main',
         ]
     },
     classifiers=[

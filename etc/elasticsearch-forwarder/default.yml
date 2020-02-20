@@ -1,0 +1,13 @@
+elasticsearch:
+  hosts:
+  - localhost
+  protocol: http
+  username: user
+  password: password
+  port: 9200
+  index: apache
+
+extra_fields:
+  event:
+    dataset: apache.access
+
