@@ -29,6 +29,37 @@ import yaml
 from elasticsearch import Elasticsearch, helpers
 from datetime import datetime
 
+def get_data(host_fields, extra_fields):
+    for stdin_line in sys.stdin:
+        line = stdin_line.strip()
+        if line == '':
+            continue
+
+        logging.info('Message: %s', line)
+
+        timestamp = int(time.time())
+        timestamp_ms = timestamp * 1000
+
+        doc = {
+            '@timestamp': timestamp_ms,
+            'message': line
+        }
+        doc.update(host_fields)
+        doc.update(extra_fields)
+
+        yield doc
+
+
+def get_bulk_data(index, pipeline, host_fields, extra_fields):
+    for doc in get_data(host_fields, extra_fields):
+        yield {
+            '_index': index,
+            '_type': '_doc',
+            '_source': doc,
+            'pipeline': pipeline
+        }
+
+
 def main():
     # Certificate WARNING bug
     urllib3.disable_warnings()
@@ -62,44 +93,30 @@ def main():
         ca_certs=config['elasticsearch']['ssl']['certificate_authorities']
     )
 
-    host = {
-        'name': platform.node(),
-        'hostname': platform.node(),
-        "os": {
-            "kernel": platform.release(),
-            "codename": distro.codename(),
-            "name": distro.name(),
-            'family': distro.like(),
-            "version": distro.version(),
-            "platform": distro.id()
-        },
-        "architecture": platform.machine()
+    host_fields = {
+        'host': {
+            'name': platform.node(),
+            'hostname': platform.node(),
+            "os": {
+                "kernel": platform.release(),
+                "codename": distro.codename(),
+                "name": distro.name(),
+                'family': distro.like(),
+                "version": distro.version(),
+                "platform": distro.id()
+            },
+            "architecture": platform.machine()
+        }
     }
     extra_fields = config['extra_fields']
+    index = config['elasticsearch']['index']
+    pipeline = config['elasticsearch']['pipeline']
 
-    for stdin_line in sys.stdin:
-        line = stdin_line.strip()
-        if line == '':
-            continue
-
-        logging.info('Message: %s', line)
-
-        timestamp = int(time.time())
-        timestamp_ms = timestamp * 1000
-
-        doc = {
-            '@timestamp': timestamp_ms,
-            'message': line,
-            'host': host,
-        }
-        doc.update(extra_fields)
-
+    '''for doc in get_data(host_fields, extra_fields):
         logging.debug('Document: %s', doc)
-        res = es.index(
-            index=config['elasticsearch']['index'], 
-            pipeline=config['elasticsearch']['pipeline'],
-            body=doc)
-        logging.info("%s doc with id %s", res['result'], res['_id'])
+        res = es.index(index=index,  pipeline=pipeline, body=doc)
+        logging.info("%s doc with id %s", res['result'], res['_id'])'''
+    helpers.bulk(es, get_bulk_data(index, pipeline, host_fields, extra_fields))
 
 
 if __name__ == '__main__':
