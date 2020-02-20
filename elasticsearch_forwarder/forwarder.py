@@ -116,11 +116,11 @@ def main():
     index = config['elasticsearch']['index']
     pipeline = config['elasticsearch']['pipeline']
 
-    '''for doc in get_data(host_fields, extra_fields):
-        logging.debug('Document: %s', doc)
+    #helpers.bulk(es, get_bulk_data(index, pipeline, host_fields, extra_fields))
+    for doc in get_data(host_fields, extra_fields):
+        logging.info('Document: %s', data)
         res = es.index(index=index,  pipeline=pipeline, body=doc)
-        logging.info("%s doc with id %s", res['result'], res['_id'])'''
-    helpers.bulk(es, get_bulk_data(index, pipeline, host_fields, extra_fields))
+        logging.info("%s doc with id %s", res['result'], res['_id'])
 
 
 if __name__ == '__main__':
