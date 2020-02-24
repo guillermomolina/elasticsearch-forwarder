@@ -29,6 +29,8 @@ import yaml
 from elasticsearch import Elasticsearch, helpers
 from datetime import datetime
 
+from modules import Module
+
 def get_data(host_fields, extra_fields):
     for stdin_line in sys.stdin:
         line = stdin_line.strip()
@@ -82,19 +84,25 @@ def main():
         loglevel = logging.ERROR
 
     logging.basicConfig(level=loglevel, 
-                        filename='/var/log/elasticsearch-forwarder.log',
+#                        filename='/var/log/elasticsearch-forwarder.log',
                         format='%(asctime)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     with open(args.config, 'r', encoding="utf-8") as config_file:
         config = yaml.load(config_file, Loader=yaml.Loader)
 
+    modules = []
+    for module_config in config['filebeat']['modules']:        
+        if module_config['module'] == 'apache':
+            modules.append(Apache(module_config))
+
+    config_elasticsearch = config['output']['elasticsearch']
     es = Elasticsearch(
-        config['elasticsearch']['hosts'],
-        http_auth=(config['elasticsearch']['username'], config['elasticsearch']['password']),
-        scheme=config['elasticsearch']['protocol'],
-        port=config['elasticsearch']['port'],
-        ca_certs=config['elasticsearch']['ssl']['certificate_authorities']
+        config_elasticsearch['hosts'],
+        http_auth=(config_elasticsearch['username'], config_elasticsearch['password']),
+        scheme=config_elasticsearch['protocol'],
+        port=config_elasticsearch['port'],
+        ca_certs=config_elasticsearch['ssl']['certificate']['authorities']
     )
 
     host_fields = {
@@ -113,8 +121,8 @@ def main():
         }
     }
     extra_fields = config['extra_fields']
-    index = config['elasticsearch']['index']
-    pipeline = config['elasticsearch']['pipeline']
+    index = config_elasticsearch['index']
+    pipeline = config_elasticsearch['pipeline']
 
     #helpers.bulk(es, get_bulk_data(index, pipeline, host_fields, extra_fields))
     for doc in get_data(host_fields, extra_fields):

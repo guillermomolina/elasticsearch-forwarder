@@ -1,4 +1,15 @@
-elasticsearch:
+filebeat.modules:
+- module: apache
+  access:
+    enabled: true
+    var.paths: 
+    - /tmp/access.log
+  error:
+    enabled: true
+    var.paths: 
+    - /tmp/error.log
+
+output.elasticsearch:
   hosts:
   - localhost
   protocol: http
@@ -6,8 +17,3 @@ elasticsearch:
   password: password
   port: 9200
   index: apache
-
-extra_fields:
-  event:
-    dataset: apache.access
-
